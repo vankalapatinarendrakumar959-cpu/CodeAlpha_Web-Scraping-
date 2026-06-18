@@ -1,0 +1,61 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+def scrape_books():
+    url = "https://books.toscrape.com/catalogue/page-1.html"
+    
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+    response = requests.get(url, headers=headers)
+    
+    if response.status_code != 200:
+        print(f"Failed to retrieve data. Status code: {response.status_code}")
+        return
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+    
+    titles = []
+    prices = []
+    ratings = []
+    availabilities = []
+
+    books = soup.find_all('article', class_='product_pod')
+
+    for book in books:
+        title = book.h3.a['title']
+        titles.append(title)
+        
+        price = book.find('p', class_='price_color').text
+        prices.append(price)
+    
+        rating_classes = book.find('p', class_='star-rating')['class']
+        rating = rating_classes[1] if len(rating_classes) > 1 else "Unknown"
+        ratings.append(rating)
+        
+        availability = book.find('p', class_='instock availability').text.strip()
+        availabilities.append(availability)
+
+    data = {
+        'Title': titles,
+        'Price': prices,
+        'Rating': ratings,
+        'Availability': availabilities
+    }
+
+    
+    df = pd.DataFrame(data)
+    
+    df['Price'] = df['Price'].str.replace('£', '').astype(float)
+    
+    output_filename = "extracted_books_dataset.csv"
+    df.to_csv(output_filename, index=False)
+    
+    print(f"Successfully scraped {len(df)} items!")
+    print(f"Dataset saved as '{output_filename}'")
+    
+
+    print("\nDataset Preview:")
+    print(df.head())
+
+if __name__ == "__main__":
+    scrape_books()
