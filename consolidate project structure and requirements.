@@ -1,0 +1,6 @@
+project structure and requirements
+CodeAlpha_Web_Scraping/
+│
+├── scraper.py
+├── extracted_books_dataset.csv
+└── requirements.txt
